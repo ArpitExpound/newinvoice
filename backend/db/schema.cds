@@ -12,7 +12,6 @@ entity billingDocument {
         SalesOrganization:String(50);
         DistributionChannel:String(50);
         SoldToParty: String(50);
-        CustomerName: String(50);
         CreationDate:String(50);
         Country:String(50);
         CustomerPaymentTerms:String(50);

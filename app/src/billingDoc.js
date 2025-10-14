@@ -21,7 +21,7 @@ import {
 import { ViewIcon, DownloadIcon } from "@chakra-ui/icons";
 import InvoiceModal from "./InvoiceModal";
 
-const API_BASE_URL = "http://localhost:4004/api/v1/";
+const API_BASE_URL = "http://localhost:51544/api/v1";
 
 const ITEMS_PER_PAGE = 10;
 
@@ -140,7 +140,6 @@ const BillingDashboard = () => {
                   <Th>FiscalYear</Th>
                   <Th>SalesOrg</Th>
                   <Th>Division</Th>
-                  <Th>Customer</Th>
                 </Tr>
               </Thead>
               <Tbody>
@@ -163,7 +162,6 @@ const BillingDashboard = () => {
                     <Td>{doc.FiscalYear}</Td>
                     <Td>{doc.SalesOrganization}</Td>
                     <Td>{doc.Division}</Td>
-                    <Td>{doc.CustomerName || "-"}</Td>
                   </Tr>
                 ))}
               </Tbody>
