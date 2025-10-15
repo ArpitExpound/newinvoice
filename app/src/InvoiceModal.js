@@ -28,8 +28,8 @@ const InvoiceModal = ({ isOpen, onClose, selectedDoc }) => {
   // 🔹Extract data safely
   const firstDeliveryItem = selectedDoc.SalesOrders?.[0]?.DeliveryItems?.[0] || {};
   const plant = firstDeliveryItem.PlantAddress || {};
-  const buyer = firstDeliveryItem.BuyerAddress || {};
-  const consignee = firstDeliveryItem.ConsigneeAddress || {};
+ const buyer = selectedDoc.Buyer || firstDeliveryItem.Buyer || {};
+const consignee = selectedDoc.Consignee || firstDeliveryItem.Consignee || {};
   const items = selectedDoc.Items || [];
   const so = selectedDoc.SalesOrders?.[0] || {};
 
@@ -78,7 +78,7 @@ const InvoiceModal = ({ isOpen, onClose, selectedDoc }) => {
                           }, ${plant.PostalCode || ""}`
                         : "Address not available"}
                     </Text>
-                    <Text>GSTIN: {plant.in_GSTIdentificationNumber || "-"}</Text>
+                    <Text>GSTIN: {plant.GSTIN || "-"}</Text>
                     <Text>State: {plant.Region || "-"}</Text>
                     <Text>Email: {plant.Email || "-"}</Text>
                   </Td>
@@ -142,10 +142,10 @@ const InvoiceModal = ({ isOpen, onClose, selectedDoc }) => {
                     <Text fontWeight="bold">Consignee (Ship To):</Text>
                     <Text>{consignee.FullName || "-"}</Text>
                     <Text>
-                      {consignee.StreetName
-                        ? `${consignee.StreetName}${
+                      {consignee.StreetName || consignee.StreetPrefixName
+                        ? `${consignee.StreetName|| consignee.StreetPrefixName}${
                             consignee.HouseNumber ? ", " + consignee.HouseNumber : ""
-                          }, ${consignee.CityName || ""}, ${consignee.PostalCode || ""}, ${
+                          }, ${consignee.CityName || ""}, ${buyer.StateName || ""}, ${buyer.StateCode || ""}, ${consignee.PostalCode || ""}, ${
                             consignee.Country || ""
                           }`
                         : "Address not available"}
@@ -155,10 +155,10 @@ const InvoiceModal = ({ isOpen, onClose, selectedDoc }) => {
                     <Text fontWeight="bold">Buyer (Bill To):</Text>
                     <Text>{buyer.FullName || "-"}</Text>
                     <Text>
-                      {buyer.StreetName
-                        ? `${buyer.StreetName}${
+                      {buyer.StreetName || consignee.StreetPrefixName
+                        ? `${buyer.StreetName|| consignee.StreetPrefixName}${
                             buyer.HouseNumber ? ", " + buyer.HouseNumber : ""
-                          }, ${buyer.CityName || ""}, ${buyer.PostalCode || ""}, ${
+                          }, ${buyer.CityName || ""}, ${buyer.StateName || ""},  ${buyer.StateCode || ""}, ${buyer.PostalCode || ""}, ${
                             buyer.Country || ""
                           }`
                         : "-"}
@@ -202,7 +202,7 @@ const InvoiceModal = ({ isOpen, onClose, selectedDoc }) => {
 
                         {/* HSN/SAC */}
                         <Td border="1px solid black">
-                          {plant.ConsumptionTaxCtrlCode || "-"}
+                          {plant.HSN || "-"}
                         </Td>
 
                         {/* Quantity */}

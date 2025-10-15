@@ -21,7 +21,7 @@ import {
 import { ViewIcon, DownloadIcon } from "@chakra-ui/icons";
 import InvoiceModal from "./InvoiceModal";
 
-const API_BASE_URL = "http://localhost:51544/api/v1";
+const API_BASE_URL = "http://localhost:54830/api/v1";
 
 const ITEMS_PER_PAGE = 10;
 
