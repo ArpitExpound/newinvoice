@@ -75,12 +75,11 @@ const consignee = selectedDoc.Consignee || firstDeliveryItem.Consignee || {};
                       {plant.StreetName
                         ? `${plant.StreetName}${plant.HouseNumber ? ", " + plant.HouseNumber : ""}, ${
                             plant.CityName || ""
-                          }, ${plant.PostalCode || ""}`
+                          }, ${plant.StateName || ""}, ${plant.PostalCode || ""}, ${plant.Country || ""}`
                         : "Address not available"}
                     </Text>
                     <Text>GSTIN: {plant.GSTIN || "-"}</Text>
-                    <Text>State: {plant.Region || "-"}</Text>
-                    <Text>Email: {plant.Email || "-"}</Text>
+                    <Text>State Name: {plant.StateName || "-"}, Code: {plant.StateCode || "-"}</Text>
                   </Td>
                   <Td border="1px solid black" p={0}>
                     <Table size="sm" border="1px solid black" borderCollapse="collapse">
@@ -145,11 +144,13 @@ const consignee = selectedDoc.Consignee || firstDeliveryItem.Consignee || {};
                       {consignee.StreetName || consignee.StreetPrefixName
                         ? `${consignee.StreetName|| consignee.StreetPrefixName}${
                             consignee.HouseNumber ? ", " + consignee.HouseNumber : ""
-                          }, ${consignee.CityName || ""}, ${buyer.StateName || ""}, ${buyer.StateCode || ""}, ${consignee.PostalCode || ""}, ${
+                          }, ${consignee.CityName || ""}, ${buyer.StateName || ""}, ${consignee.PostalCode || ""}, ${
                             consignee.Country || ""
                           }`
                         : "Address not available"}
                     </Text>
+                    <Text>GSTIN: {consignee.GSTIN }</Text>
+                    <Text>State Name: {consignee.StateName || ""}, Code: {consignee.StateCode || ""}</Text>
                   </Td>
                   <Td border="1px solid black" p={2}>
                     <Text fontWeight="bold">Buyer (Bill To):</Text>
@@ -158,11 +159,13 @@ const consignee = selectedDoc.Consignee || firstDeliveryItem.Consignee || {};
                       {buyer.StreetName || consignee.StreetPrefixName
                         ? `${buyer.StreetName|| consignee.StreetPrefixName}${
                             buyer.HouseNumber ? ", " + buyer.HouseNumber : ""
-                          }, ${buyer.CityName || ""}, ${buyer.StateName || ""},  ${buyer.StateCode || ""}, ${buyer.PostalCode || ""}, ${
+                          }, ${buyer.CityName || ""}, ${buyer.StateName || ""}, ${buyer.PostalCode || ""}, ${
                             buyer.Country || ""
                           }`
                         : "-"}
                     </Text>
+                    <Text>GSTIN: {buyer.GSTIN }</Text>
+                    <Text>State Name: {buyer.StateName || ""}, Code: {buyer.StateCode || ""}</Text>
                   </Td>
                 </Tr>
               </Tbody>

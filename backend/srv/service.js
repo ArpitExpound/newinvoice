@@ -155,12 +155,27 @@ module.exports = async function () {
                                 const plantData = await safeGet(plantUrl);
                                 const plantInfo = Array.isArray(plantData) ? plantData[0] : plantData;
                                 if (plantInfo) {
+                                // --- 🧠 Resolve state name and code ---
+                                const gstCodeToStateAbbr = {};
+                                for (const [abbr, { code }] of Object.entries(stateCodeMap)) {
+                                    gstCodeToStateAbbr[code] = abbr;
+                                }
+
+                                const regionValue = plantInfo.Region?.toString();
+                                let stateData =
+                                    stateCodeMap[regionValue] ||
+                                    Object.values(stateCodeMap).find(s => s.code === regionValue);
+
+                                const stateCodeName = stateData?.name || null;
+                                const stateCodeNum = stateData?.code || null;
                                     mappedItem.PlantAddress = {
                                         PlantName: plantInfo.PlantName || null,
                                         StreetName: plantInfo.StreetName || null,
                                         HouseNumber: plantInfo.HouseNumber || null,
                                         CityName: plantInfo.CityName || null,
                                         PostalCode: plantInfo.PostalCode || null,
+                                        StateName: stateCodeName || regionValue || null,  // readable name
+                                        StateCode: stateCodeNum || null,
                                         Region: plantInfo.Region || null,
                                         Country: plantInfo.Country || null,
                                         BusinessPlace: plantInfo.BusinessPlace || null
@@ -221,47 +236,67 @@ module.exports = async function () {
 
                 // --- Fetch BP Addresses ---
                 const bpDataMap = {};
-                    for (let bpId of bpIds) {
-                        try {
-                            const addrUrl = `${BUSINESS_PARTNER_API_URL}('${encodeURIComponent(bpId)}')/to_BusinessPartnerAddress?$format=json`;
-                            const addrResults = await safeGet(addrUrl);
-                            const addr = Array.isArray(addrResults) ? addrResults[0] : addrResults;
 
-                            if (addr) {
-                                // --- 🧠 Resolve state name and code ---
-                                const gstCodeToStateAbbr = {};
-                                for (const [abbr, { code }] of Object.entries(stateCodeMap)) {
-                                    gstCodeToStateAbbr[code] = abbr;
-                                }
+for (let bpId of bpIds) {
+    try {
+        // --- Fetch BP Address ---
+        const addrUrl = `${BUSINESS_PARTNER_API_URL}('${encodeURIComponent(bpId)}')/to_BusinessPartnerAddress?$format=json`;
+        const addrResults = await safeGet(addrUrl);
+        const addr = Array.isArray(addrResults) ? addrResults[0] : addrResults;
 
-                                const regionValue = addr.Region?.toString();
-                                let stateData =
-                                    stateCodeMap[regionValue] ||
-                                    Object.values(stateCodeMap).find(s => s.code === regionValue);
+        if (addr) {
+            // --- 🧠 Resolve state name and code ---
+            const regionValue = addr.Region?.toString();
+            let stateData =
+                stateCodeMap[regionValue] ||
+                Object.values(stateCodeMap).find(s => s.code === regionValue);
 
-                                const stateCodeName = stateData?.name || null;
-                                const stateCodeNum = stateData?.code || null;
+            const stateName = stateData?.name || null;
+            const stateCode = stateData?.code || null;
 
-                                // --- 🧩 Map cleaned address data ---
-                                bpDataMap[bpId] = {
-                                    FullName: addr.FullName || null,
-                                    HouseNumber: addr.HouseNumber || null,
-                                    StreetPrefixName: addr.StreetPrefixName || null,
-                                    StreetName: addr.StreetName || null,
-                                    CityName: addr.CityName || null,
-                                    StateName: stateCodeName || regionValue || null, // will now hold readable state name
-                                    StateCode: stateCodeNum || null,
-                                    PostalCode: addr.PostalCode || null,
-                                    Country: addr.Country || null,
-                                };
-                            } else {
-                                bpDataMap[bpId] = null;
-                            }
-                        } catch (err) {
-                            console.error(`Error fetching BP address for ${bpId}:`, err.message);
-                            bpDataMap[bpId] = null;
-                        }
-                    }
+            // --- 🧩 Initialize BP object ---
+            const bpObj = {
+                FullName: addr.FullName || null,
+                HouseNumber: addr.HouseNumber || null,
+                StreetPrefixName: addr.StreetPrefixName || null,
+                StreetName: addr.StreetName || null,
+                CityName: addr.CityName || null,
+                StateName: stateName || regionValue || null,
+                StateCode: stateCode || null,
+                PostalCode: addr.PostalCode || null,
+                Country: addr.Country || null,
+                GSTIN: null // will populate below
+            };
+
+            // --- Fetch GSTIN from Business Partner Tax (BPTaxType = 'IN3') ---
+            try {
+                const taxUrl = `${BUSINESS_PARTNER_API_URL}('${encodeURIComponent(bpId)}')/to_BusinessPartnerTax?$format=json`;
+                const taxResults = await safeGet(taxUrl);
+
+                // Normalize for OData V2/V4
+                const taxes = Array.isArray(taxResults)
+                    ? taxResults
+                    : taxResults.results
+                        ? taxResults.results
+                        : taxResults.d?.results || [];
+
+                const gstEntry = taxes.find(t => t.BPTaxType === 'IN3');
+                if (gstEntry && gstEntry.BPTaxNumber) {
+                    bpObj.GSTIN = gstEntry.BPTaxNumber;
+                }
+            } catch (taxErr) {
+                console.error(`Error fetching GSTIN for BP ${bpId}:`, taxErr.message);
+            }
+
+            bpDataMap[bpId] = bpObj;
+        } else {
+            bpDataMap[bpId] = null;
+        }
+    } catch (err) {
+        console.error(`Error fetching BP address for ${bpId}:`, err.message);
+        bpDataMap[bpId] = null;
+    }
+}
 
                 // --- Extract Buyer & Consignee globally from first DeliveryItem ---
                 if (mappedSalesOrders.length > 0 && mappedSalesOrders[0].DeliveryItems.length > 0) {
@@ -314,7 +349,7 @@ module.exports = async function () {
             if (billingDocumentId) {
                 url = `${ABAP_API_URL}('${encodeURIComponent(billingDocumentId)}')?$format=json`;
             } else {
-                url = `${ABAP_API_URL}?$format=json`;
+                url = `${ABAP_API_URL}?$top=500&?$format=json`;
             }
 
             const response = await axios.get(url, { auth: { username: ABAP_USER, password: ABAP_PASS } });
