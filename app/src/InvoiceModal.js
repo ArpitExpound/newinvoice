@@ -156,8 +156,8 @@ const consignee = selectedDoc.Consignee || firstDeliveryItem.Consignee || {};
                     <Text fontWeight="bold">Buyer (Bill To):</Text>
                     <Text>{buyer.FullName || "-"}</Text>
                     <Text>
-                      {buyer.StreetName || consignee.StreetPrefixName
-                        ? `${buyer.StreetName|| consignee.StreetPrefixName}${
+                      {buyer.StreetName || buyer.StreetPrefixName
+                        ? `${buyer.StreetName|| buyer.StreetPrefixName}${
                             buyer.HouseNumber ? ", " + buyer.HouseNumber : ""
                           }, ${buyer.CityName || ""}, ${buyer.StateName || ""}, ${buyer.PostalCode || ""}, ${
                             buyer.Country || ""
